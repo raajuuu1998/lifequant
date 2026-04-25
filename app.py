@@ -17,26 +17,7 @@ st.markdown("""
 html, body, [class*="css"] { font-family: 'Inter', sans-serif; }
 .stApp { background: #080B12; color: #F1F5F9; }
 section[data-testid="stSidebar"] { display: none; }
-.home-btn { position: fixed; top: 12px; right: 120px; z-index: 999;
-            background: #0F1623; border: 1px solid #1E293B; border-radius: 8px;
-            padding: 5px 12px; font-size: 0.78rem; color: #94A3B8; cursor: pointer; }
-.home-btn:hover { background: #1E293B; color: #E2E8F0; }
 .block-container { max-width: 780px !important; padding: 0 1rem !important; }
-header[data-testid="stHeader"] { background: #080B12 !important; }
-div[data-testid="stToolbar"] { display: none; }
-.sticky-bar { position: fixed; top: 0; left: 0; right: 0; z-index: 99999;
-              background: #080B12; border-bottom: 1px solid #1E293B;
-              padding: 8px 24px; display: flex; align-items: center;
-              justify-content: space-between; }
-.sticky-logo { font-size: 1.1rem; font-weight: 700;
-               background: linear-gradient(90deg, #2563EB, #8B5CF6, #14B8A6);
-               -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
-.sticky-spacer { height: 52px; }
-.home-float { position: fixed; top: 14px; left: 14px; z-index: 99999;
-              background: #0F1623; border: 1px solid #2563EB; border-radius: 8px;
-              padding: 6px 14px; font-size: 0.78rem; color: #93C5FD;
-              cursor: pointer; font-weight: 600; text-decoration: none; }
-.home-float:hover { background: #1E293B; }
 
 /* Top bar */
 .topbar { display: flex; align-items: center; justify-content: space-between;
@@ -79,9 +60,8 @@ div[data-testid="stToolbar"] { display: none; }
 /* Chat */
 .stChatMessage { scroll-margin-top: 0; }
 div[data-testid="stChatMessageContent"] p { font-size: 0.88rem; line-height: 1.75; }
-div[data-testid="stChatMessageContent"] h3 { font-size: 0.85rem !important; font-weight: 600; margin: 4px 0 2px; }
-div[data-testid="stChatMessageContent"] h1 { font-size: 0.95rem !important; font-weight: 700; margin: 6px 0 2px; }
-div[data-testid="stChatMessageContent"] h2 { font-size: 0.9rem !important; font-weight: 600; margin: 6px 0 2px; }
+div[data-testid="stChatMessageContent"] h3 { font-size: 0.9rem !important; font-weight: 600; margin: 6px 0 3px; }
+div[data-testid="stChatMessageContent"] h2 { font-size: 0.95rem !important; font-weight: 700; margin: 8px 0 3px; }
 div[data-testid="stChatMessageContent"] table { font-size: 0.82rem; width: 100%; }
 div[data-testid="stChatMessageContent"] th { background: #0F1623; color: #94A3B8; font-size: 0.75rem; }
 div[data-testid="stChatMessageContent"] td { padding: 5px 8px; border-bottom: 1px solid #1E293B; }
@@ -193,18 +173,6 @@ if not api_key:
 
 client = anthropic.Anthropic(api_key=api_key)
 
-# ── Floating Home button ──────────────────────────────────────────────────────
-if st.session_state.get("onboarded") or st.session_state.get("messages"):
-    col_reset, _ = st.columns([1, 5])
-    with col_reset:
-        if st.button("🏠 Home", key="float_home", use_container_width=True):
-            for k in ["doc_context","user_context","profile","scores","messages","brutal","onboarded","suggestions"]:
-                st.session_state[k] = {} if k in ["profile","scores"] else [] if k in ["messages","suggestions"] else False if k in ["brutal","onboarded"] else ""
-            st.session_state.onboard_step = 0
-            st.session_state.onboard_answers = {}
-            save_session(SID, {"doc_context":"","user_context":"","profile":{},"scores":{},"messages":[],"brutal":False,"onboarded":False,"suggestions":[]})
-            st.rerun()
-
 # ── Helpers ───────────────────────────────────────────────────────────────────
 def extract_text(f) -> str:
     name = f.name.lower()
@@ -261,12 +229,12 @@ def status(s):
     try:
         n = int(str(s))
         return "🔴 Critical" if n<=4 else "🟡 Needs work" if n<=6 else "🟢 Good"
-    except: return "⚫ No data"
+    except: return "⚪ Unknown"
 
 def render_scores(scores: dict):
     if not any(v for v in scores.values() if v): return
-    f=scores.get("finance","?") or "?"; ft=scores.get("fitness","?") or "?"
-    c=scores.get("career","?") or "?"; o=scores.get("overall","?") or "?"
+    f=scores.get("finance","—"); ft=scores.get("fitness","—")
+    c=scores.get("career","—"); o=scores.get("overall","—")
     st.markdown(f"""<div class="score-row">
 <div class="score-card"><div class="score-label">Finance</div><div class="score-num sf">{f}/10</div></div>
 <div class="score-card"><div class="score-label">Fitness</div><div class="score-num sft">{ft}/10</div></div>
@@ -357,7 +325,7 @@ QUESTIONS = [
 
 # ── TOP BAR ───────────────────────────────────────────────────────────────────
 brutal_pill = '<span class="brutal-pill">💀 Brutal</span>' if st.session_state.brutal else ""
-col1, col2, col3 = st.columns([4,1,1])
+col1, col2, col3 = st.columns([3,1,1])
 with col1:
     st.markdown(f'<div style="display:flex;align-items:center;gap:8px;padding:10px 0"><div class="lq-logo">⚡ LifeQuant</div>{brutal_pill}</div>', unsafe_allow_html=True)
 with col2:
@@ -367,7 +335,7 @@ with col2:
             st.session_state.brutal = brutal
             save_session(SID, st.session_state)
 with col3:
-    if st.button("🏠 Home", help="Clear everything and go back to start"):
+    if st.session_state.onboarded and st.button("↺ Reset", help="Start over"):
         for k in ["doc_context","user_context","profile","scores","messages","brutal","onboarded","suggestions"]:
             st.session_state[k] = {} if k in ["profile","scores"] else [] if k in ["messages","suggestions"] else False if k in ["brutal","onboarded"] else ""
         st.session_state.onboard_step = 0
@@ -462,6 +430,8 @@ Upload your documents and answer a few questions.<br>I'll build your complete op
                 if st.button(opt, key=f"opt_{step}_{i}", use_container_width=True):
                     st.session_state.onboard_answers[question] = opt
                     st.session_state.onboard_step = step + 1
+                    if step == len(QUESTIONS):
+                        _build_onboard_context()
                     st.rerun()
 
         c1, c2 = st.columns(2)
@@ -535,22 +505,6 @@ else:
             with cols[i]:
                 if st.button(s, use_container_width=True, key=f"sug{i}{s[:5]}"):
                     st.session_state._quick = s
-
-    # Controls row — brutal toggle + restart
-    col_h1, col_h2, col_h3 = st.columns([4,1,1])
-    with col_h2:
-        brutal = st.toggle("💀", value=st.session_state.brutal, key="brutal_bottom", help="Brutal mode")
-        if brutal != st.session_state.brutal:
-            st.session_state.brutal = brutal
-            save_session(SID, st.session_state)
-    with col_h3:
-        if st.button("↺ Restart", key="home_bottom", help="Clear everything and start over", use_container_width=True):
-            for k in ["doc_context","user_context","profile","scores","messages","brutal","onboarded","suggestions"]:
-                st.session_state[k] = {} if k in ["profile","scores"] else [] if k in ["messages","suggestions"] else False if k in ["brutal","onboarded"] else ""
-            st.session_state.onboard_step = 0
-            st.session_state.onboard_answers = {}
-            save_session(SID, {"doc_context":"","user_context":"","profile":{},"scores":{},"messages":[],"brutal":False,"onboarded":False,"suggestions":[]})
-            st.rerun()
 
     # File upload + chat input area
     st.markdown('<div style="height:8px"></div>', unsafe_allow_html=True)
