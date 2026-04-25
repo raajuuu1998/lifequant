@@ -191,7 +191,7 @@ def chunk_text(text, max_chars=12000):
     return text[:half] + "\n\n[truncated]\n\n" + text[-half:]
 
 EXTRACT_SYS = """Extract all data. Return ONLY valid JSON no markdown:
-{"finance":{"income_monthly":null,"expenses_monthly":null,"savings_rate_pct":null,"debt_monthly":null,"subscriptions":[],"top_expenses":[],"currency":"INR"},
+{"finance":{"income_monthly":null,"expenses_monthly":null,"savings_rate_pct":null,"debt_monthly":null,"subscriptions":[],"top_expenses":[],"currency":"USD"},
 "fitness":{"weight":null,"weight_unit":"kg","bench_1rm":null,"squat_1rm":null,"deadlift_1rm":null,"training_days_per_week":null,"goal":null},
 "career":{"current_role":null,"experience_years":null,"company":null,"current_ctc":null,"target_role":null,"target_ctc":null,"key_gap":null},
 "scores":{"finance":null,"fitness":null,"career":null,"overall":null},
@@ -310,12 +310,9 @@ Never repeat full profile after first message.
 # ── Smart adaptive questions ──────────────────────────────────────────────────
 
 CORE_QUESTIONS = [
-    ("👤", "age", "How old are you?",
-     ["18-22", "23-27", "28-32", "33-40", "41-50", "50+"], False),
-    ("⚧", "gender", "What is your gender?",
-     ["Male", "Female", "Non-binary", "Prefer not to say"], False),
-    ("📍", "location", "Which city do you live in?",
-     ["Bangalore", "Mumbai", "Delhi", "Hyderabad", "Chennai", "Pune", "Tier 2 city", "Outside India"], False),
+    ("👤", "age", "How old are you?", [], False),
+    ("📍", "location", "Which city are you based in?",
+     ["New York", "Los Angeles", "Chicago", "Houston", "London", "Toronto", "Sydney", "Remote"], False),
 ]
 
 FINANCE_QUESTIONS = [
@@ -478,20 +475,45 @@ Upload your documents and answer a few questions.<br>I'll build your complete op
         st.markdown(f'<div class="prog-bar"><div class="prog-fill-green" style="width:{pct}%"></div></div>', unsafe_allow_html=True)
         st.markdown(f'<div class="question-card"><div class="question-num">Question {step} of {len(QUESTIONS)}</div><div class="question-text">{emoji} {question}</div></div>', unsafe_allow_html=True)
 
-        if multi:
-            st.markdown('<div style="font-size:0.72rem;color:#475569;margin:8px 0 4px">Select all that apply:</div>', unsafe_allow_html=True)
-            selected = st.multiselect("", options, key=f"ms_{step}", label_visibility="collapsed")
-        else:
-            selected = []
-            cols = st.columns(len(options))
-            for i, opt in enumerate(options):
-                with cols[i]:
-                    if st.button(opt, key=f"opt_{step}_{i}", use_container_width=True):
-                        st.session_state.onboard_answers[q_key] = opt
-                        st.session_state.onboard_step = step + 1
-                        st.rerun()
+        # Initialize selected tags in session state
+        tag_key = f"tags_{step}"
+        if tag_key not in st.session_state:
+            st.session_state[tag_key] = []
 
-        answer = st.text_input("Or type your own answer", placeholder="Type here...", key=f"q_{step}", label_visibility="collapsed")
+        if len(options) == 0:
+            # Pure text input (age)
+            answer = st.text_input("Type your answer", placeholder="e.g. 28", key=f"q_{step}", label_visibility="collapsed")
+            selected = []
+        else:
+            # Pill tag selection
+            if multi:
+                st.markdown('<div style="font-size:0.75rem;color:#94A3B8;margin:10px 0 8px">Select all that apply — click to toggle:</div>', unsafe_allow_html=True)
+            else:
+                st.markdown('<div style="font-size:0.75rem;color:#94A3B8;margin:10px 0 8px">Select one or more:</div>', unsafe_allow_html=True)
+
+            # Render pill buttons in rows of 3
+            options_per_row = 3
+            for row_start in range(0, len(options), options_per_row):
+                row_opts = options[row_start:row_start+options_per_row]
+                cols = st.columns(len(row_opts))
+                for i, opt in enumerate(row_opts):
+                    with cols[i]:
+                        is_selected = opt in st.session_state[tag_key]
+                        btn_style = "primary" if is_selected else "secondary"
+                        if st.button(
+                            f"✓ {opt}" if is_selected else opt,
+                            key=f"tag_{step}_{row_start+i}",
+                            use_container_width=True,
+                            type=btn_style
+                        ):
+                            if is_selected:
+                                st.session_state[tag_key].remove(opt)
+                            else:
+                                st.session_state[tag_key].append(opt)
+                            st.rerun()
+
+            selected = st.session_state[tag_key]
+            answer = st.text_input("Or add your own", placeholder="Type here...", key=f"q_{step}", label_visibility="collapsed")
 
         c1, c2 = st.columns(2)
         with c1:
@@ -504,6 +526,9 @@ Upload your documents and answer a few questions.<br>I'll build your complete op
                 val = answer.strip() if answer.strip() else (", ".join(selected) if selected else "")
                 if val:
                     st.session_state.onboard_answers[q_key] = val
+                # Clear tag state for this step
+                if f"tags_{step}" in st.session_state:
+                    del st.session_state[f"tags_{step}"]
                 st.session_state.onboard_step = step + 1
                 st.rerun()
 
