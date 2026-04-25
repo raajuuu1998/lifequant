@@ -450,25 +450,8 @@ def build_adaptive_questions(profile: dict) -> list:
 
 
 # ── TOP BAR ───────────────────────────────────────────────────────────────────
-brutal_pill = '<span class="brutal-pill">💀 Brutal</span>' if st.session_state.brutal else ""
-col1, col2, col3 = st.columns([3,1,1])
-with col1:
-    st.markdown(f'<div style="display:flex;align-items:center;gap:8px;padding:10px 0"><div class="lq-logo">⚡ LifeQuant</div>{brutal_pill}</div>', unsafe_allow_html=True)
-with col2:
-    if st.session_state.onboarded:
-        brutal = st.toggle("🧠 Deep Thinking", value=st.session_state.brutal, help="Deep Thinking — maximum detail, raw numbers")
-        if brutal != st.session_state.brutal:
-            st.session_state.brutal = brutal
-            save_session(SID, st.session_state)
-with col3:
-    if st.button("🏠 Home", help="Start over from beginning", use_container_width=True):
-        for k in ["doc_context","user_context","profile","scores","messages","brutal","onboarded","suggestions"]:
-            st.session_state[k] = {} if k in ["profile","scores"] else [] if k in ["messages","suggestions"] else False if k in ["brutal","onboarded"] else ""
-        st.session_state.onboard_step = 0
-        st.session_state.onboard_answers = {}
-        save_session(SID, {"doc_context":"","user_context":"","profile":{},"scores":{},"messages":[],"brutal":False,"onboarded":False,"suggestions":[]})
-        st.rerun()
-
+brutal_pill = '<span class="brutal-pill">🧠 Deep</span>' if st.session_state.brutal else ""
+st.markdown(f'<div style="display:flex;align-items:center;gap:8px;padding:10px 0;border-bottom:1px solid #1E293B;margin-bottom:8px"><div class="lq-logo">⚡ LifeQuant</div>{brutal_pill}</div>', unsafe_allow_html=True)
 st.markdown('<div style="border-top:1px solid #1E293B;margin-bottom:16px"></div>', unsafe_allow_html=True)
 
 # ── SCORES ────────────────────────────────────────────────────────────────────
