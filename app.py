@@ -115,6 +115,7 @@ def load_session(sid):
         "brutal":       bool(row[6]),
         "onboarded":    bool(row[7]) if len(row) > 7 else False,
         "suggestions":  json.loads(row[8]) if len(row) > 8 and row[8] else [],
+        "personalized_questions": [],
     }
 
 def save_session(sid, data):
@@ -159,6 +160,7 @@ if "loaded" not in st.session_state:
         st.session_state.brutal       = False
         st.session_state.onboarded    = False
         st.session_state.suggestions  = []
+        st.session_state.personalized_questions = []
     st.session_state.loaded        = True
     st.session_state.onboard_step  = 0
     st.session_state.onboard_answers = {}
@@ -206,6 +208,74 @@ def run_extraction(text: str) -> dict:
         raw = r.content[0].text.strip().replace("```json","").replace("```","").strip()
         return json.loads(raw)
     except: return {}
+
+def generate_personalized_questions(doc_context: str, profile: dict) -> list:
+    """Use Claude to generate 10 personalized questions based on uploaded documents."""
+    try:
+        fin = profile.get("finance", {})
+        fit = profile.get("fitness", {})
+        car = profile.get("career", {})
+        
+        prompt = f"""You are analyzing someone's personal documents. Based on the data below, generate exactly 10 highly personalized questions to better understand this person.
+
+DOCUMENT CONTEXT:
+{doc_context[:6000]}
+
+EXTRACTED PROFILE:
+{json.dumps(profile, indent=2)}
+
+Generate 10 questions that:
+1. Are SPECIFIC to their actual data (mention their real numbers, companies, situations)
+2. Fill gaps in what we know about them
+3. Help LifeQuant give better advice
+4. Mix single-select and multi-select questions
+5. Cover finance, fitness, career, and habits/lifestyle
+
+Return ONLY a valid JSON array — no markdown, no explanation:
+[
+  {{
+    "emoji": "💰",
+    "key": "unique_key",
+    "question": "Specific personalized question mentioning their real data",
+    "options": ["Option 1", "Option 2", "Option 3", "Option 4", "Option 5"],
+    "multi": true
+  }}
+]
+
+Rules:
+- options array: 4-6 specific relevant options (not generic)
+- multi: true if multiple can apply, false if only one answer
+- key: short snake_case unique identifier
+- Always include at least 2 finance, 2 fitness, 2 career questions
+- Make questions feel like a smart advisor who READ their documents
+- First question should ALWAYS be about age (pure text, empty options array, multi: false)"""
+
+        r = client.messages.create(
+            model="claude-haiku-4-5",
+            max_tokens=2000,
+            messages=[{"role": "user", "content": prompt}]
+        )
+        raw = r.content[0].text.strip().replace("```json","").replace("```","").strip()
+        questions = json.loads(raw)
+        
+        # Convert to our tuple format: (emoji, key, question, options, multi)
+        result = []
+        for q in questions[:10]:
+            result.append((
+                q.get("emoji", "❓"),
+                q.get("key", f"q_{len(result)}"),
+                q.get("question", ""),
+                q.get("options", []),
+                q.get("multi", True)
+            ))
+        return result
+    except Exception as e:
+        # Fallback to basic questions if generation fails
+        return [
+            ("👤", "age", "How old are you?", [], False),
+            ("💰", "income", "What is your monthly income?", ["Under $3k", "$3k-$6k", "$6k-$10k", "$10k-$15k", "$15k+"], False),
+            ("😈", "bad_habits", "What are your worst daily habits?", ["Phone 3+ hrs", "Poor sleep", "Junk food", "Skipping workouts", "Overspending"], True),
+        ]
 
 def get_adaptive_suggestions(messages, scores, profile) -> list:
     if not messages: return []
@@ -462,7 +532,14 @@ Upload your documents and answer a few questions.<br>I'll build your complete op
 
     # Steps 1-10 — Adaptive questions with multi-select
     elif 1 <= step <= 10:
-        QUESTIONS = build_adaptive_questions(st.session_state.profile)
+        # Generate personalized questions if not already generated
+        if "personalized_questions" not in st.session_state or not st.session_state.personalized_questions:
+            with st.spinner("Generating your personalized questions..."):
+                st.session_state.personalized_questions = generate_personalized_questions(
+                    st.session_state.doc_context,
+                    st.session_state.profile
+                )
+        QUESTIONS = st.session_state.personalized_questions
         if step > len(QUESTIONS):
             st.session_state.onboard_step = 11
             st.rerun()
@@ -604,6 +681,7 @@ else:
                 st.session_state[k] = {} if k in ["profile","scores"] else [] if k in ["messages","suggestions"] else False if k in ["brutal","onboarded"] else ""
             st.session_state.onboard_step = 0
             st.session_state.onboard_answers = {}
+            st.session_state.personalized_questions = []
             save_session(SID, {"doc_context":"","user_context":"","profile":{},"scores":{},"messages":[],"brutal":False,"onboarded":False,"suggestions":[]})
             st.rerun()
 
