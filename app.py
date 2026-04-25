@@ -430,8 +430,6 @@ Upload your documents and answer a few questions.<br>I'll build your complete op
                 if st.button(opt, key=f"opt_{step}_{i}", use_container_width=True):
                     st.session_state.onboard_answers[question] = opt
                     st.session_state.onboard_step = step + 1
-                    if step == len(QUESTIONS):
-                        _build_onboard_context()
                     st.rerun()
 
         c1, c2 = st.columns(2)
