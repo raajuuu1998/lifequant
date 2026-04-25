@@ -536,6 +536,23 @@ else:
                 if st.button(s, use_container_width=True, key=f"sug{i}{s[:5]}"):
                     st.session_state._quick = s
 
+    # Home button above chat input — always visible
+    col_h1, col_h2, col_h3 = st.columns([1,4,1])
+    with col_h1:
+        if st.button("🏠 Home", key="home_bottom", use_container_width=True):
+            for k in ["doc_context","user_context","profile","scores","messages","brutal","onboarded","suggestions"]:
+                st.session_state[k] = {} if k in ["profile","scores"] else [] if k in ["messages","suggestions"] else False if k in ["brutal","onboarded"] else ""
+            st.session_state.onboard_step = 0
+            st.session_state.onboard_answers = {}
+            save_session(SID, {"doc_context":"","user_context":"","profile":{},"scores":{},"messages":[],"brutal":False,"onboarded":False,"suggestions":[]})
+            st.rerun()
+    with col_h3:
+        if st.session_state.onboarded:
+            brutal = st.toggle("💀", value=st.session_state.brutal, key="brutal_bottom", help="Brutal mode")
+            if brutal != st.session_state.brutal:
+                st.session_state.brutal = brutal
+                save_session(SID, st.session_state)
+
     # File upload + chat input area
     st.markdown('<div style="height:8px"></div>', unsafe_allow_html=True)
 
