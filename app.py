@@ -195,6 +195,28 @@ BEHAVIOR:
 - Casual (hi/hello) → warm 2-line reply, score summary, ask what to tackle. NO full analysis.
 - Specific question → answer only that with real numbers.
 - "full analysis" → complete 3-module breakdown.
+- "5 year simulation" or "what if" or "trajectory" → generate What-If simulator. Format:
+
+### 📊 5-Year What-If Simulator
+
+| Metric | Today | Current Path (5yr) | Optimized Path (5yr) | Difference |
+|--------|-------|-------------------|---------------------|------------|
+| 💰 Savings | ₹X | ₹X | ₹X | +₹X |
+| 💰 Net Worth | ₹X | ₹X | ₹X | +₹X |
+| 💰 Debt | ₹X | ₹X | ₹0 | Debt free |
+| 💪 Weight | Xkg | Xkg | Xkg | -Xkg |
+| 💪 Bench Press | Xkg | Xkg | Xkg | +Xkg |
+| 🎯 Salary | ₹X LPA | ₹X LPA | ₹X LPA | +₹X LPA |
+| 🎯 Role | X | X | X | Promoted |
+
+### 🔴 Current Path
+Paragraph: where they end up if nothing changes. Real numbers. Slightly uncomfortable.
+
+### 🟢 Optimized Path
+Paragraph: where they end up following LifeQuant. Inspiring with specific numbers.
+
+### 💡 Key Assumptions
+Bullet points of what changes in optimized path with numbers.
 OUTPUT FORMAT:
 - Lead every insight with NUMBER: "₹9,924/mo → food delivery (11.7% of income)"
 - Use ### for headers (small)
