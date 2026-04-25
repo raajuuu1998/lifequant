@@ -307,21 +307,76 @@ OUTPUT FORMAT always:
 Never repeat full profile after first message.
 {tone}{profile_str}{ctx_str}{score_str}"""
 
-# ── Onboarding questions ──────────────────────────────────────────────────────
-QUESTIONS = [
-    ("💰", "What's your biggest financial stress right now?",
-     ["Too much debt", "Not saving enough", "Low income", "No investments", "Overspending"]),
-    ("💪", "What's your #1 fitness goal this year?",
-     ["Lose weight", "Build muscle", "Get consistent", "Improve endurance", "Better sleep"]),
-    ("🎯", "What's your dream career move in the next 2 years?",
-     ["Get promoted", "Switch companies", "Start a business", "Increase salary", "Change field"]),
-    ("😈", "What are your worst daily habits?",
-     ["Phone addiction", "Poor sleep", "Junk food", "Skipping workouts", "Procrastination"]),
-    ("📅", "Any major life events coming up?",
-     ["Marriage", "Baby", "Moving city", "Big purchase", "None"]),
-    ("🏆", "What does success look like for you in 12 months?",
-     ["Financial freedom", "Dream body", "Dream job", "All of the above", "Something else"]),
+# ── Smart adaptive questions ──────────────────────────────────────────────────
+
+CORE_QUESTIONS = [
+    ("👤", "age", "How old are you?",
+     ["18-22", "23-27", "28-32", "33-40", "41-50", "50+"], False),
+    ("⚧", "gender", "What is your gender?",
+     ["Male", "Female", "Non-binary", "Prefer not to say"], False),
+    ("📍", "location", "Which city do you live in?",
+     ["Bangalore", "Mumbai", "Delhi", "Hyderabad", "Chennai", "Pune", "Tier 2 city", "Outside India"], False),
 ]
+
+FINANCE_QUESTIONS = [
+    ("💰", "income", "What is your monthly income?",
+     ["Under ₹30k", "₹30k-₹60k", "₹60k-₹1L", "₹1L-₹2L", "₹2L+"], False),
+    ("💸", "expenses", "Where does most of your money go?",
+     ["Rent/EMI", "Food & dining", "Subscriptions", "Shopping", "Debt payments"], True),
+    ("🏦", "debt", "What debts do you currently have?",
+     ["Home loan", "Car loan", "Personal loan", "Credit card", "No debt"], True),
+    ("📈", "investment", "What is your current investment situation?",
+     ["No investments", "Just started SIP", "Stocks/MF", "FD only", "Real estate"], True),
+]
+
+FITNESS_QUESTIONS = [
+    ("💪", "fitness_goal", "What are your fitness goals?",
+     ["Lose weight", "Build muscle", "Get consistent", "Run 5km", "Better sleep", "Reduce stress"], True),
+    ("🏋", "fitness_block", "What is blocking your fitness progress?",
+     ["No time", "No motivation", "Work stress", "Injury", "Poor diet", "Inconsistency"], True),
+]
+
+CAREER_QUESTIONS = [
+    ("🎯", "career_goal", "What is your career target in 2 years?",
+     ["Get promoted", "Switch companies", "Start business", "Increase salary 50%+", "Change field", "MBA"], True),
+    ("😤", "career_block", "What is holding your career back?",
+     ["No visibility", "Skill gaps", "Wrong company", "No network", "Low confidence", "Underpaid"], True),
+]
+
+CLOSING_QUESTIONS = [
+    ("😈", "bad_habits", "What are your worst daily habits?",
+     ["Phone 3+ hrs/day", "Poor sleep <6hrs", "Junk food", "Skipping workouts", "Procrastination", "Overspending"], True),
+    ("🏆", "success", "What does success look like in 12 months?",
+     ["Financial freedom", "Dream body", "Dream job", "All of the above", "Debt free", "Business launched"], True),
+]
+
+def build_adaptive_questions(profile: dict) -> list:
+    questions = list(CORE_QUESTIONS)
+    fin = profile.get("finance", {})
+    fit = profile.get("fitness", {})
+    car = profile.get("career", {})
+    has_finance = bool(fin.get("income_monthly") or fin.get("expenses_monthly"))
+    if not has_finance:
+        questions.extend(FINANCE_QUESTIONS)
+    else:
+        questions.append(("🏦", "debt_focus", "Which debt do you want to clear first?",
+                          ["Home loan", "Car loan", "Personal loan", "Credit card", "No debt"], True))
+    has_fitness = bool(fit.get("weight") or fit.get("bench_1rm") or fit.get("training_days_per_week"))
+    if not has_fitness:
+        questions.extend(FITNESS_QUESTIONS)
+    else:
+        questions.append(("🏋", "fitness_block", "What is blocking your fitness progress?",
+                          ["No time", "No motivation", "Work stress", "Injury", "Poor diet", "Inconsistency"], True))
+    has_career = bool(car.get("current_role") or car.get("target_role"))
+    if not has_career:
+        questions.extend(CAREER_QUESTIONS)
+    else:
+        questions.append(("😤", "career_block", "What is holding your career back?",
+                          ["No visibility", "Skill gaps", "Wrong company", "No network", "Underpaid"], True))
+    questions.extend(CLOSING_QUESTIONS)
+    return questions[:10]
+
+
 
 # ── TOP BAR ───────────────────────────────────────────────────────────────────
 brutal_pill = '<span class="brutal-pill">💀 Brutal</span>' if st.session_state.brutal else ""
@@ -330,12 +385,12 @@ with col1:
     st.markdown(f'<div style="display:flex;align-items:center;gap:8px;padding:10px 0"><div class="lq-logo">⚡ LifeQuant</div>{brutal_pill}</div>', unsafe_allow_html=True)
 with col2:
     if st.session_state.onboarded:
-        brutal = st.toggle("💀", value=st.session_state.brutal, help="Brutal honesty mode")
+        brutal = st.toggle("💀 Brutal mode", value=st.session_state.brutal, help="Brutal honesty — no softening, raw numbers only")
         if brutal != st.session_state.brutal:
             st.session_state.brutal = brutal
             save_session(SID, st.session_state)
 with col3:
-    if st.session_state.onboarded and st.button("↺ Reset", help="Start over"):
+    if st.button("🏠 Home", help="Start over from beginning", use_container_width=True):
         for k in ["doc_context","user_context","profile","scores","messages","brutal","onboarded","suggestions"]:
             st.session_state[k] = {} if k in ["profile","scores"] else [] if k in ["messages","suggestions"] else False if k in ["brutal","onboarded"] else ""
         st.session_state.onboard_step = 0
@@ -408,29 +463,35 @@ Upload your documents and answer a few questions.<br>I'll build your complete op
                 st.session_state.onboard_step = 1
                 st.rerun()
 
-    # Steps 1-6 — Questions
-    elif 1 <= step <= len(QUESTIONS):
+    # Steps 1-10 — Adaptive questions with multi-select
+    elif 1 <= step <= 10:
+        QUESTIONS = build_adaptive_questions(st.session_state.profile)
+        if step > len(QUESTIONS):
+            st.session_state.onboard_step = 11
+            st.rerun()
+
         q_idx = step - 1
-        emoji, question, options = QUESTIONS[q_idx]
+        emoji, q_key, question, options, multi = QUESTIONS[q_idx]
 
         st.markdown(f'<div style="font-size:0.72rem;color:#475569;margin-bottom:16px">Question {step} of {len(QUESTIONS)}</div>', unsafe_allow_html=True)
-
-        # Progress bar
         pct = int((step / len(QUESTIONS)) * 100)
         st.markdown(f'<div class="prog-bar"><div class="prog-fill-green" style="width:{pct}%"></div></div>', unsafe_allow_html=True)
+        st.markdown(f'<div class="question-card"><div class="question-num">Question {step} of {len(QUESTIONS)}</div><div class="question-text">{emoji} {question}</div></div>', unsafe_allow_html=True)
 
-        st.markdown(f'<div class="question-card"><div class="question-num">Question {step}</div><div class="question-text">{emoji} {question}</div></div>', unsafe_allow_html=True)
+        if multi:
+            st.markdown('<div style="font-size:0.72rem;color:#475569;margin:8px 0 4px">Select all that apply:</div>', unsafe_allow_html=True)
+            selected = st.multiselect("", options, key=f"ms_{step}", label_visibility="collapsed")
+        else:
+            selected = []
+            cols = st.columns(len(options))
+            for i, opt in enumerate(options):
+                with cols[i]:
+                    if st.button(opt, key=f"opt_{step}_{i}", use_container_width=True):
+                        st.session_state.onboard_answers[q_key] = opt
+                        st.session_state.onboard_step = step + 1
+                        st.rerun()
 
-        answer = st.text_input("Your answer", placeholder="Type here or pick below...", key=f"q_{step}", label_visibility="collapsed")
-
-        # Quick pick buttons
-        cols = st.columns(len(options))
-        for i, opt in enumerate(options):
-            with cols[i]:
-                if st.button(opt, key=f"opt_{step}_{i}", use_container_width=True):
-                    st.session_state.onboard_answers[question] = opt
-                    st.session_state.onboard_step = step + 1
-                    st.rerun()
+        answer = st.text_input("Or type your own answer", placeholder="Type here...", key=f"q_{step}", label_visibility="collapsed")
 
         c1, c2 = st.columns(2)
         with c1:
@@ -440,13 +501,14 @@ Upload your documents and answer a few questions.<br>I'll build your complete op
                     st.rerun()
         with c2:
             if st.button("Next →", use_container_width=True):
-                if answer.strip():
-                    st.session_state.onboard_answers[question] = answer.strip()
+                val = answer.strip() if answer.strip() else (", ".join(selected) if selected else "")
+                if val:
+                    st.session_state.onboard_answers[q_key] = val
                 st.session_state.onboard_step = step + 1
                 st.rerun()
 
-    # Step 7 — Done
-    elif step > len(QUESTIONS):
+    # Step 11+ — Done
+    elif step > 10:
         # Build user context from answers
         answers = st.session_state.get("onboard_answers", {})
         context_lines = [f"- {q}: {a}" for q, a in answers.items()]
@@ -503,6 +565,22 @@ else:
             with cols[i]:
                 if st.button(s, use_container_width=True, key=f"sug{i}{s[:5]}"):
                     st.session_state._quick = s
+
+    # Controls row — brutal toggle + restart above chat
+    col_h1, col_h2, col_h3 = st.columns([4,1,1])
+    with col_h2:
+        brutal = st.toggle("💀 Brutal", value=st.session_state.brutal, key="brutal_bottom", help="Raw numbers, no softening")
+        if brutal != st.session_state.brutal:
+            st.session_state.brutal = brutal
+            save_session(SID, st.session_state)
+    with col_h3:
+        if st.button("↺ Restart", key="home_bottom", help="Clear everything and start over", use_container_width=True):
+            for k in ["doc_context","user_context","profile","scores","messages","brutal","onboarded","suggestions"]:
+                st.session_state[k] = {} if k in ["profile","scores"] else [] if k in ["messages","suggestions"] else False if k in ["brutal","onboarded"] else ""
+            st.session_state.onboard_step = 0
+            st.session_state.onboard_answers = {}
+            save_session(SID, {"doc_context":"","user_context":"","profile":{},"scores":{},"messages":[],"brutal":False,"onboarded":False,"suggestions":[]})
+            st.rerun()
 
     # File upload + chat input area
     st.markdown('<div style="height:8px"></div>', unsafe_allow_html=True)
