@@ -656,7 +656,7 @@ else:
                     st.session_state._quick = s
 
     # Controls row — Full Profile Analysis | Deep Thinking | Restart
-    col_h1, col_h2, col_h3 = st.columns([2,1,1])
+    col_h1, col_h2, col_h3 = st.columns([2,2,1])
     with col_h1:
         if st.button("🧠 Full Profile Analysis", use_container_width=True, key="deep_profile"):
             st.session_state._quick = "Run a complete deep profile analysis across all 3 modules — finance, fitness and career. Use every data point from my documents and answers. Be extremely specific with numbers, timelines and action plans."
