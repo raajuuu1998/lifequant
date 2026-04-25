@@ -17,6 +17,10 @@ st.markdown("""
 html, body, [class*="css"] { font-family: 'Inter', sans-serif; }
 .stApp { background: #080B12; color: #F1F5F9; }
 section[data-testid="stSidebar"] { display: none; }
+.home-btn { position: fixed; top: 12px; right: 120px; z-index: 999;
+            background: #0F1623; border: 1px solid #1E293B; border-radius: 8px;
+            padding: 5px 12px; font-size: 0.78rem; color: #94A3B8; cursor: pointer; }
+.home-btn:hover { background: #1E293B; color: #E2E8F0; }
 .block-container { max-width: 780px !important; padding: 0 1rem !important; }
 
 /* Top bar */
