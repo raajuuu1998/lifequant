@@ -452,7 +452,7 @@ with col1:
     st.markdown(f'<div style="display:flex;align-items:center;gap:8px;padding:10px 0"><div class="lq-logo">⚡ LifeQuant</div>{brutal_pill}</div>', unsafe_allow_html=True)
 with col2:
     if st.session_state.onboarded:
-        brutal = st.toggle("🔬 Deep Analysis", value=st.session_state.brutal, help="Deep Analysis — maximum detail, raw numbers")
+        brutal = st.toggle("🧠 Deep Thinking", value=st.session_state.brutal, help="Deep Thinking — maximum detail, raw numbers")
         if brutal != st.session_state.brutal:
             st.session_state.brutal = brutal
             save_session(SID, st.session_state)
@@ -671,7 +671,7 @@ else:
     # Controls row — brutal toggle + restart above chat
     col_h1, col_h2, col_h3 = st.columns([1,2,1])
     with col_h2:
-        brutal = st.toggle("🔬 Deep Analysis", value=st.session_state.brutal, key="brutal_bottom", help="Deep Analysis mode")
+        brutal = st.toggle("🧠 Deep Thinking", value=st.session_state.brutal, key="brutal_bottom", help="Deep Thinking — maximum detail, raw numbers")
         if brutal != st.session_state.brutal:
             st.session_state.brutal = brutal
             save_session(SID, st.session_state)
