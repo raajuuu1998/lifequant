@@ -567,7 +567,7 @@ else:
                     st.session_state._quick = s
 
     # Controls row — brutal toggle + restart above chat
-    col_h1, col_h2, col_h3 = st.columns([4,1,1])
+    col_h1, col_h2, col_h3 = st.columns([2,3,1])
     with col_h2:
         brutal = st.toggle("🔬 Deep Analysis", value=st.session_state.brutal, key="brutal_bottom", help="Deep Analysis mode")
         if brutal != st.session_state.brutal:
