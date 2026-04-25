@@ -492,15 +492,6 @@ I now have a complete picture of your situation — documents + your real contex
 # MAIN CHAT
 # ══════════════════════════════════════════════════════════════════════════════
 else:
-    # Home button in chat view
-    if st.button("🏠 Start Over", key="home_chat"):
-        for k in ["doc_context","user_context","profile","scores","messages","brutal","onboarded","suggestions"]:
-            st.session_state[k] = {} if k in ["profile","scores"] else [] if k in ["messages","suggestions"] else False if k in ["brutal","onboarded"] else ""
-        st.session_state.onboard_step = 0
-        st.session_state.onboard_answers = {}
-        save_session(SID, {"doc_context":"","user_context":"","profile":{},"scores":{},"messages":[],"brutal":False,"onboarded":False,"suggestions":[]})
-        st.rerun()
-
     # Chat history
     for msg in st.session_state.messages:
         with st.chat_message(msg["role"]):
