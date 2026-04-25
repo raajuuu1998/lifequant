@@ -385,7 +385,7 @@ with col1:
     st.markdown(f'<div style="display:flex;align-items:center;gap:8px;padding:10px 0"><div class="lq-logo">⚡ LifeQuant</div>{brutal_pill}</div>', unsafe_allow_html=True)
 with col2:
     if st.session_state.onboarded:
-        brutal = st.toggle("💀 Brutal mode", value=st.session_state.brutal, help="Brutal honesty — no softening, raw numbers only")
+        brutal = st.toggle("🔬 Deep Analysis", value=st.session_state.brutal, help="Deep Analysis — maximum detail, raw numbers")
         if brutal != st.session_state.brutal:
             st.session_state.brutal = brutal
             save_session(SID, st.session_state)
@@ -569,7 +569,7 @@ else:
     # Controls row — brutal toggle + restart above chat
     col_h1, col_h2, col_h3 = st.columns([4,1,1])
     with col_h2:
-        brutal = st.toggle("💀 Brutal", value=st.session_state.brutal, key="brutal_bottom", help="Raw numbers, no softening")
+        brutal = st.toggle("🔬 Deep Analysis", value=st.session_state.brutal, key="brutal_bottom", help="Deep Analysis mode")
         if brutal != st.session_state.brutal:
             st.session_state.brutal = brutal
             save_session(SID, st.session_state)
@@ -613,7 +613,7 @@ else:
         del st.session_state._quick
         user_input = quick
     else:
-        hint = "Ask anything... (💀 brutal mode)" if st.session_state.brutal else "Ask LifeQuant anything..."
+        hint = "Ask anything... (🔬 Deep Analysis on)" if st.session_state.brutal else "Ask LifeQuant anything..."
         user_input = st.chat_input(hint)
 
     if user_input:
