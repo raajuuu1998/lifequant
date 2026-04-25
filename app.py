@@ -325,7 +325,7 @@ QUESTIONS = [
 
 # ── TOP BAR ───────────────────────────────────────────────────────────────────
 brutal_pill = '<span class="brutal-pill">💀 Brutal</span>' if st.session_state.brutal else ""
-col1, col2, col3 = st.columns([3,1,1])
+col1, col2, col3 = st.columns([4,1,1])
 with col1:
     st.markdown(f'<div style="display:flex;align-items:center;gap:8px;padding:10px 0"><div class="lq-logo">⚡ LifeQuant</div>{brutal_pill}</div>', unsafe_allow_html=True)
 with col2:
