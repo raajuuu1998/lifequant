@@ -18,6 +18,10 @@ html, body, [class*="css"] { font-family: 'Inter', sans-serif; }
 .stApp { background: #080B12; color: #F1F5F9; }
 section[data-testid="stSidebar"] { display: none; }
 .block-container { max-width: 780px !important; padding: 0 1rem !important; }
+a[href*="github.com"] { display: none !important; }
+[data-testid="stToolbar"] { display: none !important; }
+#MainMenu { display: none !important; }
+header { display: none !important; }
 
 /* Top bar */
 .topbar { display: flex; align-items: center; justify-content: space-between;
