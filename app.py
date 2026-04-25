@@ -22,6 +22,11 @@ section[data-testid="stSidebar"] { display: none; }
             padding: 5px 12px; font-size: 0.78rem; color: #94A3B8; cursor: pointer; }
 .home-btn:hover { background: #1E293B; color: #E2E8F0; }
 .block-container { max-width: 780px !important; padding: 0 1rem !important; }
+.home-float { position: fixed; top: 14px; left: 14px; z-index: 99999;
+              background: #0F1623; border: 1px solid #2563EB; border-radius: 8px;
+              padding: 6px 14px; font-size: 0.78rem; color: #93C5FD;
+              cursor: pointer; font-weight: 600; text-decoration: none; }
+.home-float:hover { background: #1E293B; }
 
 /* Top bar */
 .topbar { display: flex; align-items: center; justify-content: space-between;
@@ -177,6 +182,18 @@ if not api_key:
     st.stop()
 
 client = anthropic.Anthropic(api_key=api_key)
+
+# ── Floating Home button ──────────────────────────────────────────────────────
+if st.session_state.get("onboarded") or st.session_state.get("messages"):
+    col_reset, _ = st.columns([1, 5])
+    with col_reset:
+        if st.button("🏠 Home", key="float_home", use_container_width=True):
+            for k in ["doc_context","user_context","profile","scores","messages","brutal","onboarded","suggestions"]:
+                st.session_state[k] = {} if k in ["profile","scores"] else [] if k in ["messages","suggestions"] else False if k in ["brutal","onboarded"] else ""
+            st.session_state.onboard_step = 0
+            st.session_state.onboard_answers = {}
+            save_session(SID, {"doc_context":"","user_context":"","profile":{},"scores":{},"messages":[],"brutal":False,"onboarded":False,"suggestions":[]})
+            st.rerun()
 
 # ── Helpers ───────────────────────────────────────────────────────────────────
 def extract_text(f) -> str:
