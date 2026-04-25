@@ -234,12 +234,12 @@ def status(s):
     try:
         n = int(str(s))
         return "🔴 Critical" if n<=4 else "🟡 Needs work" if n<=6 else "🟢 Good"
-    except: return "⚪ Unknown"
+    except: return "⚫ No data"
 
 def render_scores(scores: dict):
     if not any(v for v in scores.values() if v): return
-    f=scores.get("finance","—"); ft=scores.get("fitness","—")
-    c=scores.get("career","—"); o=scores.get("overall","—")
+    f=scores.get("finance","?") or "?"; ft=scores.get("fitness","?") or "?"
+    c=scores.get("career","?") or "?"; o=scores.get("overall","?") or "?"
     st.markdown(f"""<div class="score-row">
 <div class="score-card"><div class="score-label">Finance</div><div class="score-num sf">{f}/10</div></div>
 <div class="score-card"><div class="score-label">Fitness</div><div class="score-num sft">{ft}/10</div></div>
