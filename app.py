@@ -22,6 +22,16 @@ section[data-testid="stSidebar"] { display: none; }
             padding: 5px 12px; font-size: 0.78rem; color: #94A3B8; cursor: pointer; }
 .home-btn:hover { background: #1E293B; color: #E2E8F0; }
 .block-container { max-width: 780px !important; padding: 0 1rem !important; }
+header[data-testid="stHeader"] { background: #080B12 !important; }
+div[data-testid="stToolbar"] { display: none; }
+.sticky-bar { position: fixed; top: 0; left: 0; right: 0; z-index: 99999;
+              background: #080B12; border-bottom: 1px solid #1E293B;
+              padding: 8px 24px; display: flex; align-items: center;
+              justify-content: space-between; }
+.sticky-logo { font-size: 1.1rem; font-weight: 700;
+               background: linear-gradient(90deg, #2563EB, #8B5CF6, #14B8A6);
+               -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+.sticky-spacer { height: 52px; }
 .home-float { position: fixed; top: 14px; left: 14px; z-index: 99999;
               background: #0F1623; border: 1px solid #2563EB; border-radius: 8px;
               padding: 6px 14px; font-size: 0.78rem; color: #93C5FD;
