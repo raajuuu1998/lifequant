@@ -335,7 +335,7 @@ with col2:
             st.session_state.brutal = brutal
             save_session(SID, st.session_state)
 with col3:
-    if st.button("↺ Start Over", help="Clear everything and restart"):
+    if st.button("🏠 Home", help="Clear everything and go back to start"):
         for k in ["doc_context","user_context","profile","scores","messages","brutal","onboarded","suggestions"]:
             st.session_state[k] = {} if k in ["profile","scores"] else [] if k in ["messages","suggestions"] else False if k in ["brutal","onboarded"] else ""
         st.session_state.onboard_step = 0
