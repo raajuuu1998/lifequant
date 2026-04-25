@@ -60,8 +60,9 @@ section[data-testid="stSidebar"] { display: none; }
 /* Chat */
 .stChatMessage { scroll-margin-top: 0; }
 div[data-testid="stChatMessageContent"] p { font-size: 0.88rem; line-height: 1.75; }
-div[data-testid="stChatMessageContent"] h3 { font-size: 0.9rem !important; font-weight: 600; margin: 6px 0 3px; }
-div[data-testid="stChatMessageContent"] h2 { font-size: 0.95rem !important; font-weight: 700; margin: 8px 0 3px; }
+div[data-testid="stChatMessageContent"] h3 { font-size: 0.85rem !important; font-weight: 600; margin: 4px 0 2px; }
+div[data-testid="stChatMessageContent"] h1 { font-size: 0.95rem !important; font-weight: 700; margin: 6px 0 2px; }
+div[data-testid="stChatMessageContent"] h2 { font-size: 0.9rem !important; font-weight: 600; margin: 6px 0 2px; }
 div[data-testid="stChatMessageContent"] table { font-size: 0.82rem; width: 100%; }
 div[data-testid="stChatMessageContent"] th { background: #0F1623; color: #94A3B8; font-size: 0.75rem; }
 div[data-testid="stChatMessageContent"] td { padding: 5px 8px; border-bottom: 1px solid #1E293B; }
@@ -491,6 +492,15 @@ I now have a complete picture of your situation — documents + your real contex
 # MAIN CHAT
 # ══════════════════════════════════════════════════════════════════════════════
 else:
+    # Home button in chat view
+    if st.button("🏠 Start Over", key="home_chat"):
+        for k in ["doc_context","user_context","profile","scores","messages","brutal","onboarded","suggestions"]:
+            st.session_state[k] = {} if k in ["profile","scores"] else [] if k in ["messages","suggestions"] else False if k in ["brutal","onboarded"] else ""
+        st.session_state.onboard_step = 0
+        st.session_state.onboard_answers = {}
+        save_session(SID, {"doc_context":"","user_context":"","profile":{},"scores":{},"messages":[],"brutal":False,"onboarded":False,"suggestions":[]})
+        st.rerun()
+
     # Chat history
     for msg in st.session_state.messages:
         with st.chat_message(msg["role"]):
