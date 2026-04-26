@@ -182,17 +182,20 @@ client = anthropic.Anthropic(api_key=api_key)
 # ── Helpers ───────────────────────────────────────────────────────────────────
 def clean_output(text: str) -> str:
     import re
-    # Fix X/month X/mo X/year patterns
-    text = re.sub(r'\$([\d,]+)/month', r'$\1 per month', text)
-    text = re.sub(r'\$([\d,]+)/mo\b', r'$\1 per month', text)
-    text = re.sub(r'\$([\d,]+)/year', r'$\1 per year', text)
-    text = re.sub(r'\$([\d,]+)/yr\b', r'$\1 per year', text)
-    # Fix number/month without dollar sign
-    text = re.sub(r'([\d,]+)/month', r'\1 per month', text)
-    text = re.sub(r'([\d,]+)/mo\b', r'\1 per month', text)
-    # Fix asterisk * used as multiply or bullet outside of markdown
-    text = re.sub(r'(?<!\*)\*(?!\*)(\w)', r' \1', text)
-    text = re.sub(r'(\w)\*(?!\*)(?!\s*\*)', r'\1 ', text)
+    # Fix /month /mo /year /yr
+    text = re.sub(r"/month", " per month", text)
+    text = re.sub(r"/mo(?=\b|\s|\*|$)", " per month", text)
+    text = re.sub(r"/year", " per year", text)
+    text = re.sub(r"/yr(?=\b|\s|\*|$)", " per year", text)
+    text = re.sub(r"/annually", " per year", text)
+    # Fix =X,XXX patterns like =1,139.76
+    text = re.sub(r"=\s*(\$?[\d,]+\.?\d*)", r" = \1", text)
+    # Fix stray single asterisks used as multiply (not part of ** bold)
+    text = re.sub(r"(?<!\*)\*(?!\*)", " x ", text)
+    # Fix numbers running into words like 94.98permonth 7,283at
+    text = re.sub(r"(\d)(per)(?=\s|month|year)", r"\1 per", text)
+    text = re.sub(r"(\d)(at)(\d)", r"\1 at \3", text)
+    text = re.sub(r"(\d)(These|This|The|At|In|It|You|your|for|from)", r"\1 \2", text)
     return text
 
 def extract_text(f) -> str:
