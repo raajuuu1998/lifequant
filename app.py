@@ -182,6 +182,28 @@ client = anthropic.Anthropic(api_key=api_key)
 # ── Helpers ───────────────────────────────────────────────────────────────────
 def clean_output(text: str) -> str:
     import re
+    # Fix number immediately followed by word (no space): 7,000balance -> $7,000 balance
+    text = re.sub(r'([\d,]+)([a-zA-Z])', r'\1 \2', text)
+    # Fix word immediately followed by number: balance7000 -> balance 7000
+    text = re.sub(r'([a-zA-Z])([\d])', r'\1 \2', text)
+    # Fix ** in middle of sentence (not at line start)
+    text = re.sub(r'(?<!\n)\*\*([^*]+)\*\*', r'\1', text)
+    # Fix single * used as multiply
+    text = re.sub(r'(?<=[\d\s])\*(?=[\d\s])', r' x ', text)
+    # Fix /month /mo /year
+    text = text.replace('/month', ' per month')
+    text = text.replace('/mo ', ' per month ')
+    text = text.replace('/year', ' per year')
+    text = text.replace('/yr', ' per year')
+    # Fix = between amounts
+    text = re.sub(r'(\$[\d,\.]+)\s*=\s*(\$[\d,\.]+)', r'\1 which equals \2', text)
+    # Fix em dash running into words
+    text = re.sub(r'—([a-zA-Z])', r'— \1', text)
+    text = re.sub(r'([a-zA-Z])—', r'\1 —', text)
+    return text
+
+def clean_output_old(text: str) -> str:
+    import re
     # Fix /month /mo /year /yr
     text = re.sub(r"/month", " per month", text)
     text = re.sub(r"/mo(?=\b|\s|\*|$)", " per month", text)
