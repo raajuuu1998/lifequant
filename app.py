@@ -180,6 +180,21 @@ if not api_key:
 client = anthropic.Anthropic(api_key=api_key)
 
 # ── Helpers ───────────────────────────────────────────────────────────────────
+def clean_output(text: str) -> str:
+    import re
+    # Fix X/month X/mo X/year patterns
+    text = re.sub(r'\$([\d,]+)/month', r'$\1 per month', text)
+    text = re.sub(r'\$([\d,]+)/mo\b', r'$\1 per month', text)
+    text = re.sub(r'\$([\d,]+)/year', r'$\1 per year', text)
+    text = re.sub(r'\$([\d,]+)/yr\b', r'$\1 per year', text)
+    # Fix number/month without dollar sign
+    text = re.sub(r'([\d,]+)/month', r'\1 per month', text)
+    text = re.sub(r'([\d,]+)/mo\b', r'\1 per month', text)
+    # Fix asterisk * used as multiply or bullet outside of markdown
+    text = re.sub(r'(?<!\*)\*(?!\*)(\w)', r' \1', text)
+    text = re.sub(r'(\w)\*(?!\*)(?!\s*\*)', r'\1 ', text)
+    return text
+
 def extract_text(f) -> str:
     name = f.name.lower()
     if name.endswith(".pdf"):
@@ -756,8 +771,8 @@ else:
             ) as stream:
                 for text in stream.text_stream:
                     full += text
-                    ph.markdown(full + "▌")
-            ph.markdown(full)
+                    ph.markdown(clean_output(full) + "▌")
+            ph.markdown(clean_output(full))
 
         st.session_state.messages.append({"role":"assistant","content":full})
         new_sugs = get_adaptive_suggestions(st.session_state.messages, st.session_state.scores, st.session_state.profile)
