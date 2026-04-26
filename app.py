@@ -292,7 +292,7 @@ def get_adaptive_suggestions(messages, scores, profile) -> list:
             if valid: weakest = min(valid.items(), key=lambda x: x[1])[0]
         r = client.messages.create(
             model="claude-haiku-4-5", max_tokens=150,
-            messages=[{"role":"user","content":f"Suggest 4 short follow-up button labels.\nConversation: {conv}\nWeakest: {weakest}\nReturn ONLY JSON array of 4 strings max 5 words each."}])
+            messages=[{"role":"user","content":"Suggest 4 specific follow-ups to: " + (messages[-1]["content"][:400] if messages else "") + "\nReturn ONLY JSON array of 4 strings max 6 words each."}])
         raw = r.content[0].text.strip().replace("```json","").replace("```","").strip()
         sugs = json.loads(raw)
         return sugs[:4] if isinstance(sugs,list) else []
@@ -365,7 +365,8 @@ BEHAVIOR:
 
 OUTPUT FORMAT always:
 - Lead every insight with NUMBER: "₹9,924/mo → food delivery (11.7% of income)"
-- Use ### for headers
+- Use ### for headers ONLY — never # or ##. Keep headers small.
+- In GAP line write plain text only no markdown bold
 - Tables for comparisons
 - Bullets for lists
 - Emoji progress bars: Weight: 🟧🟧🟧🟧🟧🟧🟧⬜⬜⬜ 89.5kg → 82kg (🟩=good 🟧=progress 🟥=critical ⬜=remaining)
